@@ -2,7 +2,7 @@ package com.bpcbt.lessons.spring.task1;
 
 public class SimpleHolder {
 
-    SimpleBean simpleBean;
+    private SimpleBean simpleBean;
     public SimpleHolder(SimpleBean simpleBean) {
         this.simpleBean = simpleBean;
     }
