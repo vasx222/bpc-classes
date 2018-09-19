@@ -2,12 +2,8 @@ package com.bpcbt.lessons.spring.task1;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Component;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Types;
 import java.util.List;
 
 @Component
@@ -27,7 +23,7 @@ public class SimpleController {
         printCustomersAccounts();
     }
 
-    Account getCustomerAccount(String name) {
+    public Account getCustomerAccount(String name) {
         String sql = "select * from customers inner join " +
                 "accounts on customers.account_id=accounts.id where customers.name=?";
 
@@ -40,19 +36,14 @@ public class SimpleController {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        try {
-            return list.get(0);
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("No account for user with name + " + name);
-            return null;
-        }
+            return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by name"));
     }
 
-    Integer convertAmount(Account account, String currencyTo) {
+    public Integer convertAmount(Account account, String currencyTo) {
         return convertAmount(account.getAmount(), account.getCurrency(), currencyTo);
     }
 
-    Integer convertAmount(Integer amount, String currencyFrom, String currencyTo) {
+    public Integer convertAmount(Integer amount, String currencyFrom, String currencyTo) {
         String sql = "select * from currency_rates where currency1=? and currency2=?";
 
         List<Float> list = jdbcTemplate.query(sql,
@@ -60,20 +51,13 @@ public class SimpleController {
                     preparedStatement.setString(1, currencyFrom);
                     preparedStatement.setString(2, currencyTo);
                 },
-                (rs, rowNum) -> {
-                    Float multiplier = rs.getFloat("multiplier");
-                    return amount * multiplier;
-                });
+                (rs, rowNum) -> rs.getFloat("multiplier"));
 
-        try {
-            return Math.round(list.get(0));
-        } catch (IndexOutOfBoundsException e) {
-            System.out.println("Impossible to convert currency");
-            return null;
-        }
+        return list.stream().findFirst()
+                .map(e -> Math.round(e * amount)).orElseThrow(() -> new RuntimeException("Impossible to convert amount"));
     }
 
-    void transfer(String customerFrom, String customerTo, Integer amount, String currency) {
+    public void transfer(String customerFrom, String customerTo, Integer amount, String currency) {
         Account accountFrom = getCustomerAccount(customerFrom);
         Account accountTo = getCustomerAccount(customerTo);
         Integer amount1 = convertAmount(accountFrom, DEFAULT_CURRENCY);
@@ -92,7 +76,7 @@ public class SimpleController {
         jdbcTemplate.update(sql, amount2, accountTo.getId());
     }
 
-    void printCustomersAccounts() {
+    public void printCustomersAccounts() {
         String sql = "select * from customers inner join accounts on customers.account_id = accounts.id";
         jdbcTemplate.query(sql, rs -> {
             do {
@@ -108,7 +92,7 @@ public class SimpleController {
         });
     }
 
-    void printTable(String tableName) {
+    public void printTable(String tableName) {
         System.out.println("tableName = " + tableName);
         jdbcTemplate.query("select * from " + tableName,
                 rs -> {

@@ -34,4 +34,20 @@ public class MainTest {
     public void checkPrint() {
         controller.printCustomersAccounts();
     }
+
+    @Test
+    public void checkGetCustomerAccount() {
+        Assertions.assertThat(controller.getCustomerAccount("Vasily"))
+                .isEqualToComparingOnlyGivenFields(new Account(5, 22222, "EUR", 200),
+                        "id", "accountNumber", "currency");
+        Assertions.assertThatThrownBy(() -> controller.getCustomerAccount("NoSuchName"))
+                .isExactlyInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    public void checkConvertAmount() {
+        Assertions.assertThat(controller.convertAmount(100, "RUB", "USD")).isEqualTo(2);
+        Assertions.assertThatThrownBy(() ->controller.convertAmount(200, "A", "B"))
+                .isExactlyInstanceOf(RuntimeException.class);
+    }
 }
