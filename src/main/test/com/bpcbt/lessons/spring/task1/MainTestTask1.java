@@ -1,13 +1,11 @@
 package com.bpcbt.lessons.spring.task1;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Assert;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-public class MainTest {
+public class MainTestTask1 {
     private static SimpleController controller;
 
     @BeforeClass

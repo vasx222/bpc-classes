@@ -1,10 +1,10 @@
 package com.bpcbt.lessons.spring.task1;
 
 public class Account {
-    private final Integer id;
-    private final Integer accountNumber;
-    private final String currency;
-    private final Integer amount;
+    private Integer id;
+    private Integer accountNumber;
+    private String currency;
+    private Integer amount;
 
     @Override
     public String toString() {
@@ -16,7 +16,7 @@ public class Account {
                 '}';
     }
 
-    Account(Integer id, Integer accountNumber, String currency, Integer amount) {
+    public Account(Integer id, Integer accountNumber, String currency, Integer amount) {
         this.id = id;
         this.accountNumber = accountNumber;
         this.currency = currency;
@@ -37,5 +37,21 @@ public class Account {
 
     public Integer getAmount() {
         return amount;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public void setAccountNumber(Integer accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
+
+    public void setAmount(Integer amount) {
+        this.amount = amount;
     }
 }

@@ -14,20 +14,6 @@ import java.util.Random;
 @Configuration
 @ComponentScan("com.bpcbt.lessons.spring")
 public class SimpleConfig {
-
-    @Bean
-    @Scope("prototype")
-    public String textGenerator() {
-        String[] split = "Привет,Hello,Bonjure,Konnichiwa".split(",");
-        Random random = new Random();
-        return split[random.nextInt(split.length)];
-    }
-
-    @Bean
-    public SimpleHolder simpleHolder(SimpleBean simpleBean) {
-        return new SimpleHolder(simpleBean);
-    }
-
     @Bean
     public DataSource dataSource() {
         return new EmbeddedDatabaseBuilder()

@@ -17,12 +17,6 @@ public class SimpleController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    void run() {
-        printCustomersAccounts();
-        transfer("Vasily", "Ilya", 100, "RUB");
-        printCustomersAccounts();
-    }
-
     public Account getCustomerAccount(String name) {
         String sql = "select * from customers inner join " +
                 "accounts on customers.account_id=accounts.id where customers.name=?";
@@ -36,7 +30,7 @@ public class SimpleController {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-            return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by name"));
+        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by name"));
     }
 
     public Integer convertAmount(Account account, String currencyTo) {
@@ -82,8 +76,8 @@ public class SimpleController {
             do {
                 System.out.println(
                         "CUSTOMER_ID = " + rs.getInt("customers.id") + " " +
-                        "ACCOUNT_ID = " + rs.getInt("accounts.id") + " " +
-                        "NAME = " + rs.getString("name") + " " +
+                                "ACCOUNT_ID = " + rs.getInt("accounts.id") + " " +
+                                "NAME = " + rs.getString("name") + " " +
                                 "ACCOUNT_NUMBER = " + rs.getInt("account_number") + " " +
                                 "CURRENCY = " + rs.getString("currency") + " " +
                                 "AMOUNT = " + rs.getInt("amount")
@@ -104,5 +98,29 @@ public class SimpleController {
                     } while (rs.next());
                 }
         );
+    }
+
+    public void insertAccount(Account account) {
+        String sql = "insert into accounts values (?, ?, ?, ?)";
+        int inserted = jdbcTemplate.update(sql, account.getId(), account.getAccountNumber(), account.getCurrency(), account.getAmount());
+        if (inserted != 0) {
+            System.out.println("Account inserted");
+        } else {
+            System.out.println("Account was not inserted");
+        }
+    }
+
+    public Account getAccountById(Integer id) {
+        String sql = "select * from accounts where id = ?";
+        List<Account> list = jdbcTemplate.query(sql,
+                preparedStatement -> {
+                    preparedStatement.setInt(1, id);
+                },
+                (rs, rowNum) -> new Account(
+                        rs.getInt("accounts.id"),
+                        rs.getInt("account_number"),
+                        rs.getString("currency"),
+                        rs.getInt("amount")));
+        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by id"));
     }
 }
