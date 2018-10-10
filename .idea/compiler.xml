@@ -6,11 +6,11 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="spring-data" />
+        <module name="jsf-primefaces-spring-boot" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="spring-data" target="8" />
+      <module name="jsf-primefaces-spring-boot" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>
