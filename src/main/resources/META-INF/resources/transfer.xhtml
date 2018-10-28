@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+      xmlns:f="http://xmlns.jcp.org/jsf/core">
+<ui:composition template="index.xhtml">
+
+    <ui:define name="content">
+        <h:form id="productForm">
+            <p:growl id="msgs" showDetail="true" autoUpdate="true"/>
+
+            <p:panel header="Transfer money">
+                <h:panelGrid id="panelGrid" columns="5" border="1" cellpadding="5"
+                             style="border-collapse: collapse; width: 100%">
+
+                    <p:column/>
+                    <p:column>Name</p:column>
+                    <p:column>Account number</p:column>
+                    <p:column>Amount</p:column>
+                    <p:column>Currency</p:column>
+
+                    <p:outputLabel value="Sender: "/>
+                    <p:selectOneMenu value="#{transferMoneyManager.senderName}" style="width: 50%">
+                        <f:selectItems value="#{transferMoneyManager.customersNames}"/>
+                        <p:ajax event="itemSelect" update="senderAccountNumber senderAmount senderCurrency"/>
+                    </p:selectOneMenu>
+                    <p:outputLabel id="senderAccountNumber"
+                                   value="#{transferMoneyManager.senderAccount.accountNumber}"/>
+                    <p:outputLabel id="senderAmount" value="#{transferMoneyManager.senderAccount.amount}"/>
+                    <p:outputLabel id="senderCurrency" value="#{transferMoneyManager.senderAccount.currency}"/>
+
+                    <p:outputLabel value="Recipient: "/>
+                    <p:selectOneMenu value="#{transferMoneyManager.recipientName}" style="width: 50%">
+                        <f:selectItems value="#{transferMoneyManager.customersNames}"/>
+                        <p:ajax event="itemSelect" update="recipientAccountNumber recipientAmount recipientCurrency"/>
+                    </p:selectOneMenu>
+                    <p:outputLabel id="recipientAccountNumber"
+                                   value="#{transferMoneyManager.recipientAccount.accountNumber}"/>
+                    <p:outputLabel id="recipientAmount" value="#{transferMoneyManager.recipientAccount.amount}"/>
+                    <p:outputLabel id="recipientCurrency" value="#{transferMoneyManager.recipientAccount.currency}"/>
+                </h:panelGrid>
+
+                <h:panelGrid columns="2">
+                    <p:outputLabel for="amount" value="Amount: "/>
+                    <p:inputText id="amount" value="#{transferMoneyManager.amount}" required="true">
+                        <f:validateLongRange minimum="1"/>
+                    </p:inputText>
+
+                    <p:outputLabel for="currency" value="Currency: "/>
+                    <p:selectOneMenu id="currency" value="#{transferMoneyManager.currency}" required="true">
+                        <f:selectItems value="#{transferMoneyManager.currencies}"/>
+                    </p:selectOneMenu>
+                </h:panelGrid>
+
+                <h:commandButton value="Transfer" action="#{transferMoneyManager.transferMoney}"/>
+            </p:panel>
+        </h:form>
+    </ui:define>
+
+</ui:composition>
+</html>

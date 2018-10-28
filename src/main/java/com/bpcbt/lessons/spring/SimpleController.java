@@ -1,10 +1,14 @@
 package com.bpcbt.lessons.spring;
 
 import com.bpcbt.lessons.spring.model.Account;
+import com.bpcbt.lessons.spring.model.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
+import java.sql.PreparedStatement;
 import java.util.List;
 
 @Component
@@ -59,8 +63,7 @@ public class SimpleController {
         Integer amount2 = convertAmount(accountTo, DEFAULT_CURRENCY);
         amount = convertAmount(amount, currency, DEFAULT_CURRENCY);
         if (amount1 - amount < 0) {
-            System.out.println("Sender has not enough money");
-            return;
+            throw new RuntimeException("Impossible to transfer money");
         }
 
         amount1 = convertAmount(amount1 - amount, DEFAULT_CURRENCY, accountFrom.getCurrency());
@@ -101,27 +104,95 @@ public class SimpleController {
         );
     }
 
-    public void insertAccount(Account account) {
-        String sql = "insert into accounts values (?, ?, ?, ?)";
-        int inserted = jdbcTemplate.update(sql, account.getId(), account.getAccountNumber(), account.getCurrency(), account.getAmount());
-        if (inserted != 0) {
-            System.out.println("Account inserted");
-        } else {
-            System.out.println("Account was not inserted");
-        }
-    }
-
     public Account getAccountById(Integer id) {
         String sql = "select * from accounts where id = ?";
         List<Account> list = jdbcTemplate.query(sql,
-                preparedStatement -> {
-                    preparedStatement.setInt(1, id);
-                },
+                preparedStatement -> preparedStatement.setInt(1, id),
                 (rs, rowNum) -> new Account(
                         rs.getInt("accounts.id"),
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
         return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by id"));
+    }
+
+    public Customer getCustomerByName(String name) {
+        String sql = "select * from customers where customers.name = ?";
+        List<Customer> list = jdbcTemplate.query(sql,
+                preparedStatement -> preparedStatement.setString(1, name),
+                (rs, rowNum) -> new Customer(
+                        rs.getInt("customers.id"),
+                        rs.getString("customers.name"),
+                        rs.getInt("customers.account_id")));
+        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find customer by name"));
+    }
+
+    public Account getAccountByAccountNumber(Integer accountNumber) {
+        String sql = "select * from accounts where account_number = ?";
+        List<Account> list = jdbcTemplate.query(sql,
+                preparedStatement -> preparedStatement.setInt(1, accountNumber),
+                (rs, rowNum) -> new Account(
+                        rs.getInt("accounts.id"),
+                        rs.getInt("account_number"),
+                        rs.getString("currency"),
+                        rs.getInt("amount")));
+        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by account_number"));
+    }
+
+    public List<String> getCurrencies() {
+        String sql = "select distinct currency1 from currency_rates";
+        return jdbcTemplate.query(sql, (resultSet, i) -> resultSet.getString("currency1"));
+    }
+
+    public List<Customer> getCustomers() {
+        String sql = "select * from customers";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new Customer(
+                rs.getInt("customers.id"),
+                rs.getString("customers.name"),
+                rs.getInt("customers.account_id")));
+    }
+
+    public List<Account> getAccounts() {
+        String sql = "select * from accounts";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new Account(
+                rs.getInt("accounts.id"),
+                rs.getInt("accounts.account_number"),
+                rs.getString("accounts.currency"),
+                rs.getInt("accounts.amount")));
+    }
+
+    public Boolean customerWithNameExists(String name) {
+        try {
+            getCustomerByName(name);
+        } catch (RuntimeException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean accountWithAccountNumberExists(Integer accountNumber) {
+        try {
+            getAccountByAccountNumber(accountNumber);
+        } catch (RuntimeException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public void insertCustomerWithAccount(String name, Integer accountNumber, String currency, Integer amount) {
+        final String sql1 = "insert into accounts (account_number, currency, amount) values(?, ?, ?)";
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(
+                connection -> {
+                    PreparedStatement ps =
+                            connection.prepareStatement(sql1, new String[]{"id"});
+                    ps.setInt(1, accountNumber);
+                    ps.setString(2, currency);
+                    ps.setInt(3, amount);
+                    return ps;
+                },
+                keyHolder);
+        final String sql2 = "insert into customers (name, account_id) values(?, ?)";
+        jdbcTemplate.update(sql2, name, keyHolder.getKey());
     }
 }
