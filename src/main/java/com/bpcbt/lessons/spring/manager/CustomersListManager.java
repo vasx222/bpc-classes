@@ -1,6 +1,6 @@
 package com.bpcbt.lessons.spring.manager;
 
-import com.bpcbt.lessons.spring.SimpleController;
+import com.bpcbt.lessons.spring.repository.JdbcRepository;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +18,13 @@ public class CustomersListManager {
 
     private List<Customer> customers;
     private Map<Integer, Account> accounts;
-    private SimpleController controller;
+    private JdbcRepository jdbcRepository;
 
     @Autowired
-    public CustomersListManager(SimpleController controller) {
-        this.controller = controller;
-        this.customers = controller.getCustomers();
-        this.accounts = controller.getAccounts().stream().collect(Collectors.toMap(Account::getId, Function.identity()));
+    public CustomersListManager(JdbcRepository jdbcRepository) {
+        this.jdbcRepository = jdbcRepository;
+        this.customers = jdbcRepository.getCustomers();
+        this.accounts = jdbcRepository.getAccounts().stream().collect(Collectors.toMap(Account::getId, Function.identity()));
     }
 
     public List<Customer> getCustomers() {

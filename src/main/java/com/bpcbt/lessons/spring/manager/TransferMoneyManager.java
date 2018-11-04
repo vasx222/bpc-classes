@@ -1,10 +1,8 @@
 package com.bpcbt.lessons.spring.manager;
 
-import com.bpcbt.lessons.spring.SimpleController;
+import com.bpcbt.lessons.spring.repository.JdbcRepository;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
-import org.primefaces.PrimeFaces;
-import org.primefaces.context.RequestContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -28,7 +26,7 @@ public class TransferMoneyManager {
     private String currency;
     private Integer amount;
 
-    private SimpleController controller;
+    private JdbcRepository jdbcRepository;
 
     private Map<String, Customer> customers;
     private Map<Integer, Account> accounts;
@@ -38,13 +36,13 @@ public class TransferMoneyManager {
     private String recipientName;
 
     @Autowired
-    public TransferMoneyManager(SimpleController controller) {
-        this.controller = controller;
-        customers = controller.getCustomers().stream()
+    public TransferMoneyManager(JdbcRepository jdbcRepository) {
+        this.jdbcRepository = jdbcRepository;
+        customers = jdbcRepository.getCustomers().stream()
                 .collect(Collectors.toMap(Customer::getName, Function.identity()));
-        accounts = controller.getAccounts().stream()
+        accounts = jdbcRepository.getAccounts().stream()
                 .collect(Collectors.toMap(Account::getId, Function.identity()));
-        this.currencies = controller.getCurrencies();
+        this.currencies = jdbcRepository.getCurrencies();
 
 
         sender = customers.values().iterator().next();
@@ -64,7 +62,7 @@ public class TransferMoneyManager {
             success = false;
         }
         try {
-            controller.transfer(senderName, recipientName, amount, currency);
+            jdbcRepository.transfer(senderName, recipientName, amount, currency);
         } catch (RuntimeException e) {
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Transfer error", "Sender doesn't have enough money"));

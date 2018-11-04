@@ -1,4 +1,4 @@
-package com.bpcbt.lessons.spring;
+package com.bpcbt.lessons.spring.repository;
 
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
@@ -12,13 +12,13 @@ import java.sql.PreparedStatement;
 import java.util.List;
 
 @Component
-public class SimpleController {
+public class JdbcRepository {
 
     private JdbcTemplate jdbcTemplate;
     private static final String DEFAULT_CURRENCY = "RUB";
 
     @Autowired
-    public SimpleController(JdbcTemplate jdbcTemplate) {
+    public JdbcRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
