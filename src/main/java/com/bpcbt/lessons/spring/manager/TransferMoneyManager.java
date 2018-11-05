@@ -1,5 +1,6 @@
 package com.bpcbt.lessons.spring.manager;
 
+import com.bpcbt.lessons.spring.exception.MoneyTransferException;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
 import com.bpcbt.lessons.spring.repository.MainRepository;
@@ -63,7 +64,7 @@ public class TransferMoneyManager {
         }
         try {
             mainRepository.transfer(senderName, recipientName, amount, currency);
-        } catch (RuntimeException e) {
+        } catch (MoneyTransferException e) {
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Transfer error", "Sender doesn't have enough money"));
             success = false;

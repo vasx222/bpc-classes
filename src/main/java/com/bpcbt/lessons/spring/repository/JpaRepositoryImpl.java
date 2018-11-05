@@ -1,22 +1,29 @@
 package com.bpcbt.lessons.spring.repository;
 
+import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
+import com.bpcbt.lessons.spring.exception.AmountConversionException;
+import com.bpcbt.lessons.spring.exception.CustomerNotFoundException;
 import com.bpcbt.lessons.spring.model.Account;
+import com.bpcbt.lessons.spring.model.CurrencyRate;
 import com.bpcbt.lessons.spring.model.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class JpaRepositoryImpl implements MainRepository {
 
     private AccountRepository accountRepository;
     private CustomerRepository customerRepository;
+    private CurrencyRateRepository currencyRateRepository;
 
     @Autowired
-    public JpaRepositoryImpl(AccountRepository accountRepository, CustomerRepository customerRepository) {
+    public JpaRepositoryImpl(AccountRepository accountRepository, CustomerRepository customerRepository, CurrencyRateRepository currencyRateRepository) {
         this.accountRepository = accountRepository;
         this.customerRepository = customerRepository;
+        this.currencyRateRepository = currencyRateRepository;
     }
 
     @Override
@@ -26,12 +33,13 @@ public class JpaRepositoryImpl implements MainRepository {
 
     @Override
     public Integer convertAmount(Account account, String currencyTo) {
-        return null;
+        return convertAmount(account.getAmount(), account.getCurrency(), currencyTo);
     }
 
     @Override
     public Integer convertAmount(Integer amount, String currencyFrom, String currencyTo) {
-        return null;
+        return currencyRateRepository.findCurrencyRateByCurrency1AndCurrency2(currencyFrom, currencyTo)
+                .map(o -> Math.round(o.getMultiplier() * amount)).orElseThrow(() -> new AmountConversionException());
     }
 
     @Override
@@ -41,32 +49,32 @@ public class JpaRepositoryImpl implements MainRepository {
 
     @Override
     public void printCustomersAccounts() {
-
+        // todo: printCustomersAccounts
     }
 
     @Override
     public void printTable(String tableName) {
-
+        // todo: printTable
     }
 
     @Override
     public Account getAccountById(Integer id) {
-        return accountRepository.findById(id).orElseThrow(() -> new RuntimeException("Impossible to find account by id"));
+        return accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException("Impossible to find account by id"));
     }
 
     @Override
     public Customer getCustomerByName(String name) {
-        return null;
+        return customerRepository.findCustomerByName(name).orElseThrow(() -> new CustomerNotFoundException());
     }
 
     @Override
     public Account getAccountByAccountNumber(Integer accountNumber) {
-        return null;
+        return accountRepository.findFirstByAccountNumber(accountNumber).orElseThrow(() -> new AccountNotFoundException());
     }
 
     @Override
     public List<String> getCurrencies() {
-        return null;
+        return currencyRateRepository.findAll().stream().map(CurrencyRate::getCurrency1).distinct().collect(Collectors.toList());
     }
 
     @Override
@@ -81,12 +89,12 @@ public class JpaRepositoryImpl implements MainRepository {
 
     @Override
     public Boolean customerWithNameExists(String name) {
-        return null;
+        return customerRepository.existsCustomerByName(name);
     }
 
     @Override
     public Boolean accountWithAccountNumberExists(Integer accountNumber) {
-        return null;
+        return accountRepository.existsAccountByAccountNumber(accountNumber);
     }
 
     @Override

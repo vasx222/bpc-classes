@@ -1,5 +1,9 @@
 package com.bpcbt.lessons.spring.repository;
 
+import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
+import com.bpcbt.lessons.spring.exception.AmountConversionException;
+import com.bpcbt.lessons.spring.exception.CustomerNotFoundException;
+import com.bpcbt.lessons.spring.exception.MoneyTransferException;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +41,7 @@ public class JdbcRepositoryImpl implements MainRepository {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by name"));
+        return list.stream().findFirst().orElseThrow(() -> new AccountNotFoundException("Impossible to find account by name"));
     }
 
     @Override
@@ -57,7 +61,7 @@ public class JdbcRepositoryImpl implements MainRepository {
                 (rs, rowNum) -> rs.getFloat("multiplier"));
 
         return list.stream().findFirst()
-                .map(e -> Math.round(e * amount)).orElseThrow(() -> new RuntimeException("Impossible to convert amount"));
+                .map(e -> Math.round(e * amount)).orElseThrow(() -> new AmountConversionException("Impossible to convert amount"));
     }
 
     @Override
@@ -68,7 +72,7 @@ public class JdbcRepositoryImpl implements MainRepository {
         Integer amount2 = convertAmount(accountTo, DEFAULT_CURRENCY);
         amount = convertAmount(amount, currency, DEFAULT_CURRENCY);
         if (amount1 - amount < 0) {
-            throw new RuntimeException("Impossible to transfer money");
+            throw new MoneyTransferException("Impossible to transfer money");
         }
 
         amount1 = convertAmount(amount1 - amount, DEFAULT_CURRENCY, accountFrom.getCurrency());
@@ -121,7 +125,7 @@ public class JdbcRepositoryImpl implements MainRepository {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by id"));
+        return list.stream().findFirst().orElseThrow(() -> new AccountNotFoundException("Impossible to find account by id"));
     }
 
     @Override
@@ -133,7 +137,7 @@ public class JdbcRepositoryImpl implements MainRepository {
                         rs.getInt("customers.id"),
                         rs.getString("customers.name"),
                         rs.getInt("customers.account_id")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find customer by name"));
+        return list.stream().findFirst().orElseThrow(() -> new CustomerNotFoundException("Impossible to find customer by name"));
     }
 
     @Override
@@ -146,7 +150,7 @@ public class JdbcRepositoryImpl implements MainRepository {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by account_number"));
+        return list.stream().findFirst().orElseThrow(() -> new AccountNotFoundException("Impossible to find account by account_number"));
     }
 
     @Override
@@ -178,7 +182,7 @@ public class JdbcRepositoryImpl implements MainRepository {
     public Boolean customerWithNameExists(String name) {
         try {
             getCustomerByName(name);
-        } catch (RuntimeException e) {
+        } catch (CustomerNotFoundException e) {
             return false;
         }
         return true;
@@ -188,7 +192,7 @@ public class JdbcRepositoryImpl implements MainRepository {
     public Boolean accountWithAccountNumberExists(Integer accountNumber) {
         try {
             getAccountByAccountNumber(accountNumber);
-        } catch (RuntimeException e) {
+        } catch (AccountNotFoundException e) {
             return false;
         }
         return true;

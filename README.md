@@ -1,4 +1,4 @@
-Project was created as part of the studying Spring<br/>
+Project was created as part of studying Spring<br/>
 To run the application start main method from SpringPrimeFacesApplication class<br/>
 
 It's planned to add:
