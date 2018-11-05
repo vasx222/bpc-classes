@@ -3,25 +3,27 @@ package com.bpcbt.lessons.spring.repository;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.util.List;
 
-@Component
-public class JdbcRepository {
+@Repository
+@Primary
+public class JdbcRepositoryImpl implements MainRepository {
 
     private JdbcTemplate jdbcTemplate;
-    private static final String DEFAULT_CURRENCY = "RUB";
 
     @Autowired
-    public JdbcRepository(JdbcTemplate jdbcTemplate) {
+    public JdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
     public Account getCustomerAccount(String name) {
         String sql = "select * from customers inner join " +
                 "accounts on customers.account_id=accounts.id where customers.name=?";
@@ -38,10 +40,12 @@ public class JdbcRepository {
         return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by name"));
     }
 
+    @Override
     public Integer convertAmount(Account account, String currencyTo) {
         return convertAmount(account.getAmount(), account.getCurrency(), currencyTo);
     }
 
+    @Override
     public Integer convertAmount(Integer amount, String currencyFrom, String currencyTo) {
         String sql = "select * from currency_rates where currency1=? and currency2=?";
 
@@ -56,6 +60,7 @@ public class JdbcRepository {
                 .map(e -> Math.round(e * amount)).orElseThrow(() -> new RuntimeException("Impossible to convert amount"));
     }
 
+    @Override
     public void transfer(String customerFrom, String customerTo, Integer amount, String currency) {
         Account accountFrom = getCustomerAccount(customerFrom);
         Account accountTo = getCustomerAccount(customerTo);
@@ -74,6 +79,7 @@ public class JdbcRepository {
         jdbcTemplate.update(sql, amount2, accountTo.getId());
     }
 
+    @Override
     public void printCustomersAccounts() {
         String sql = "select * from customers inner join accounts on customers.account_id = accounts.id";
         jdbcTemplate.query(sql, rs -> {
@@ -90,6 +96,7 @@ public class JdbcRepository {
         });
     }
 
+    @Override
     public void printTable(String tableName) {
         System.out.println("tableName = " + tableName);
         jdbcTemplate.query("select * from " + tableName,
@@ -104,6 +111,7 @@ public class JdbcRepository {
         );
     }
 
+    @Override
     public Account getAccountById(Integer id) {
         String sql = "select * from accounts where id = ?";
         List<Account> list = jdbcTemplate.query(sql,
@@ -116,6 +124,7 @@ public class JdbcRepository {
         return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by id"));
     }
 
+    @Override
     public Customer getCustomerByName(String name) {
         String sql = "select * from customers where customers.name = ?";
         List<Customer> list = jdbcTemplate.query(sql,
@@ -127,6 +136,7 @@ public class JdbcRepository {
         return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find customer by name"));
     }
 
+    @Override
     public Account getAccountByAccountNumber(Integer accountNumber) {
         String sql = "select * from accounts where account_number = ?";
         List<Account> list = jdbcTemplate.query(sql,
@@ -139,11 +149,13 @@ public class JdbcRepository {
         return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by account_number"));
     }
 
+    @Override
     public List<String> getCurrencies() {
         String sql = "select distinct currency1 from currency_rates";
         return jdbcTemplate.query(sql, (resultSet, i) -> resultSet.getString("currency1"));
     }
 
+    @Override
     public List<Customer> getCustomers() {
         String sql = "select * from customers";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Customer(
@@ -152,6 +164,7 @@ public class JdbcRepository {
                 rs.getInt("customers.account_id")));
     }
 
+    @Override
     public List<Account> getAccounts() {
         String sql = "select * from accounts";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Account(
@@ -161,6 +174,7 @@ public class JdbcRepository {
                 rs.getInt("accounts.amount")));
     }
 
+    @Override
     public Boolean customerWithNameExists(String name) {
         try {
             getCustomerByName(name);
@@ -170,6 +184,7 @@ public class JdbcRepository {
         return true;
     }
 
+    @Override
     public Boolean accountWithAccountNumberExists(Integer accountNumber) {
         try {
             getAccountByAccountNumber(accountNumber);
@@ -179,6 +194,7 @@ public class JdbcRepository {
         return true;
     }
 
+    @Override
     public void insertCustomerWithAccount(String name, Integer accountNumber, String currency, Integer amount) {
         final String sql1 = "insert into accounts (account_number, currency, amount) values(?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();

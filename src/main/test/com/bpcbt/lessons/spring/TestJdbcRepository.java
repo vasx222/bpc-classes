@@ -2,7 +2,8 @@ package com.bpcbt.lessons.spring;
 
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
-import com.bpcbt.lessons.spring.repository.JdbcRepository;
+import com.bpcbt.lessons.spring.repository.JdbcRepositoryImpl;
+import com.bpcbt.lessons.spring.repository.MainRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -10,56 +11,56 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 
 public class TestJdbcRepository {
-    private static JdbcRepository jdbcRepository;
+    private static MainRepository mainRepository;
 
     @BeforeClass
     public static void initRepository() {
         ApplicationContext applicationContext = SpringApplication.run(SpringPrimeFacesApplication.class);
-        jdbcRepository = applicationContext.getBean(JdbcRepository.class);
+        mainRepository = applicationContext.getBean(JdbcRepositoryImpl.class);
     }
 
     @Test
     public void checkTransfer() {
-        Account accountFrom = jdbcRepository.getCustomerAccount("Vasily");
-        Account accountTo = jdbcRepository.getCustomerAccount("Ilya");
+        Account accountFrom = mainRepository.getCustomerAccount("Vasily");
+        Account accountTo = mainRepository.getCustomerAccount("Ilya");
         Assertions.assertThat(accountFrom.getAmount()).isEqualTo(200);
         Assertions.assertThat(accountTo.getAmount()).isEqualTo(100000);
-        jdbcRepository.transfer("Vasily", "Ilya", 300, "RUB");
-        accountFrom = jdbcRepository.getCustomerAccount("Vasily");
-        accountTo = jdbcRepository.getCustomerAccount("Ilya");
+        mainRepository.transfer("Vasily", "Ilya", 300, "RUB");
+        accountFrom = mainRepository.getCustomerAccount("Vasily");
+        accountTo = mainRepository.getCustomerAccount("Ilya");
         Assertions.assertThat(accountTo.getAmount()).isEqualTo(100300);
         Assertions.assertThat(Math.round((200f * 79.46f - 300f) * 0.01f)).isEqualTo(accountFrom.getAmount());
 
-        Assertions.assertThatThrownBy(() -> jdbcRepository.transfer("Vasily", "Ilya", 10000000, "RUB"))
+        Assertions.assertThatThrownBy(() -> mainRepository.transfer("Vasily", "Ilya", 10000000, "RUB"))
                 .isExactlyInstanceOf(RuntimeException.class);
     }
 
     @Test
     public void checkPrint() {
-        jdbcRepository.printCustomersAccounts();
+        mainRepository.printCustomersAccounts();
     }
 
     @Test
     public void checkGetCustomerAccount() {
-        Assertions.assertThat(jdbcRepository.getCustomerAccount("Vasily"))
+        Assertions.assertThat(mainRepository.getCustomerAccount("Vasily"))
                 .isEqualToComparingOnlyGivenFields(new Account(5, 22222, "EUR", 200),
                         "id", "accountNumber", "currency");
-        Assertions.assertThatThrownBy(() -> jdbcRepository.getCustomerAccount("NoSuchName"))
+        Assertions.assertThatThrownBy(() -> mainRepository.getCustomerAccount("NoSuchName"))
                 .isExactlyInstanceOf(RuntimeException.class);
     }
 
     @Test
     public void checkConvertAmount() {
-        Assertions.assertThat(jdbcRepository.convertAmount(100, "RUB", "USD")).isEqualTo(2);
-        Assertions.assertThatThrownBy(() -> jdbcRepository.convertAmount(200, "A", "B"))
+        Assertions.assertThat(mainRepository.convertAmount(100, "RUB", "USD")).isEqualTo(2);
+        Assertions.assertThatThrownBy(() -> mainRepository.convertAmount(200, "A", "B"))
                 .isExactlyInstanceOf(RuntimeException.class);
     }
 
     @Test
     public void checkInsertCustomerWithAccount() {
-        jdbcRepository.insertCustomerWithAccount("Bob", 12345, "RUB", 1000);
-        Customer customer1 = jdbcRepository.getCustomerByName("Bob");
-        Account account1 = jdbcRepository.getAccountByAccountNumber(12345);
+        mainRepository.insertCustomerWithAccount("Bob", 12345, "RUB", 1000);
+        Customer customer1 = mainRepository.getCustomerByName("Bob");
+        Account account1 = mainRepository.getAccountByAccountNumber(12345);
 
         Assertions.assertThat(customer1.getName()).isEqualTo("Bob");
         Assertions.assertThat(account1.getAccountNumber()).isEqualTo(12345);
@@ -70,9 +71,9 @@ public class TestJdbcRepository {
 
     @Test
     public void checkExistMethods() {
-        Assertions.assertThat(jdbcRepository.customerWithNameExists("Vasily")).isTrue();
-        Assertions.assertThat(jdbcRepository.customerWithNameExists("NoSuchName")).isFalse();
-        Assertions.assertThat(jdbcRepository.accountWithAccountNumberExists(22222)).isTrue();
-        Assertions.assertThat(jdbcRepository.accountWithAccountNumberExists(-1)).isFalse();
+        Assertions.assertThat(mainRepository.customerWithNameExists("Vasily")).isTrue();
+        Assertions.assertThat(mainRepository.customerWithNameExists("NoSuchName")).isFalse();
+        Assertions.assertThat(mainRepository.accountWithAccountNumberExists(22222)).isTrue();
+        Assertions.assertThat(mainRepository.accountWithAccountNumberExists(-1)).isFalse();
     }
 }

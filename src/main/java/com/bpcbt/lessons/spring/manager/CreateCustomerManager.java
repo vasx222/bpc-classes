@@ -1,6 +1,6 @@
 package com.bpcbt.lessons.spring.manager;
 
-import com.bpcbt.lessons.spring.repository.JdbcRepository;
+import com.bpcbt.lessons.spring.repository.MainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -18,27 +18,27 @@ public class CreateCustomerManager {
     private Integer amount;
     private List<String> currencies;
 
-    private JdbcRepository jdbcRepository;
+    private MainRepository mainRepository;
 
     @Autowired
-    public CreateCustomerManager(JdbcRepository jdbcRepository) {
-        this.jdbcRepository = jdbcRepository;
+    public CreateCustomerManager(MainRepository mainRepository) {
+        this.mainRepository = mainRepository;
         this.customerName = "";
         this.accountNumber = 0;
         this.currency = "RUB";
         this.amount = 0;
-        this.currencies = jdbcRepository.getCurrencies();
+        this.currencies = mainRepository.getCurrencies();
     }
 
     private boolean validate() {
         boolean validate = true;
 
-        if (jdbcRepository.customerWithNameExists(customerName)) {
+        if (mainRepository.customerWithNameExists(customerName)) {
             validate = false;
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Validation error", "Customer with such name already exists"));
         }
-        if (jdbcRepository.accountWithAccountNumberExists(accountNumber)) {
+        if (mainRepository.accountWithAccountNumberExists(accountNumber)) {
             validate = false;
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Validation error", "Account with such number already exists"));
@@ -49,7 +49,7 @@ public class CreateCustomerManager {
 
     public String createCustomer() {
         if (validate()) {
-            jdbcRepository.insertCustomerWithAccount(customerName, accountNumber, currency, amount);
+            mainRepository.insertCustomerWithAccount(customerName, accountNumber, currency, amount);
             return "list";
         }
         return null;

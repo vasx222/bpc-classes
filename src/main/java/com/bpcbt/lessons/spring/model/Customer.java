@@ -1,37 +1,20 @@
 package com.bpcbt.lessons.spring.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+import javax.persistence.*;
+
+@Data
+@AllArgsConstructor
+@Entity
+@Table (name = "customers")
 public class Customer {
+    @Id
+    @GeneratedValue
     private Integer id;
+    @Column(name = "name")
     private String name;
+    @Column(name = "account_id")
     private Integer accountId;
-
-    public Customer(Integer id, String name, Integer accountId) {
-        this.id = id;
-        this.name = name;
-        this.accountId = accountId;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getAccountId() {
-        return accountId;
-    }
-
-    public void setAccountId(Integer accountId) {
-        this.accountId = accountId;
-    }
 }

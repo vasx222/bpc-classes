@@ -1,8 +1,8 @@
 package com.bpcbt.lessons.spring.manager;
 
-import com.bpcbt.lessons.spring.repository.JdbcRepository;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
+import com.bpcbt.lessons.spring.repository.MainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -26,7 +26,7 @@ public class TransferMoneyManager {
     private String currency;
     private Integer amount;
 
-    private JdbcRepository jdbcRepository;
+    private MainRepository mainRepository;
 
     private Map<String, Customer> customers;
     private Map<Integer, Account> accounts;
@@ -36,13 +36,13 @@ public class TransferMoneyManager {
     private String recipientName;
 
     @Autowired
-    public TransferMoneyManager(JdbcRepository jdbcRepository) {
-        this.jdbcRepository = jdbcRepository;
-        customers = jdbcRepository.getCustomers().stream()
+    public TransferMoneyManager(MainRepository mainRepository) {
+        this.mainRepository = mainRepository;
+        customers = mainRepository.getCustomers().stream()
                 .collect(Collectors.toMap(Customer::getName, Function.identity()));
-        accounts = jdbcRepository.getAccounts().stream()
+        accounts = mainRepository.getAccounts().stream()
                 .collect(Collectors.toMap(Account::getId, Function.identity()));
-        this.currencies = jdbcRepository.getCurrencies();
+        this.currencies = mainRepository.getCurrencies();
 
 
         sender = customers.values().iterator().next();
@@ -62,7 +62,7 @@ public class TransferMoneyManager {
             success = false;
         }
         try {
-            jdbcRepository.transfer(senderName, recipientName, amount, currency);
+            mainRepository.transfer(senderName, recipientName, amount, currency);
         } catch (RuntimeException e) {
             FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR,
                     "Transfer error", "Sender doesn't have enough money"));
