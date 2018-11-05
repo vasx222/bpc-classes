@@ -1,22 +1,49 @@
 package com.bpcbt.lessons.spring;
 
+import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
+import com.bpcbt.lessons.spring.exception.AmountConversionException;
+import com.bpcbt.lessons.spring.exception.MoneyTransferException;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
-import com.bpcbt.lessons.spring.repository.JdbcRepositoryImpl;
 import com.bpcbt.lessons.spring.repository.MainRepository;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.Assertions;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ApplicationContext;
 
-public class TestJdbcRepository {
-    private static MainRepository mainRepository;
+import java.util.Arrays;
+import java.util.Collection;
+
+@RunWith(Parameterized.class)
+public class MainRepositoryTest {
+
+    @Parameterized.Parameter
+    public String repositoryName;
+
+    private MainRepository mainRepository;
+
+    private static ApplicationContext context;
+
+    @Parameterized.Parameters(name = "Tests for {0}")
+    public static Collection<Object> data() {
+        return Arrays.asList(new Object[]{
+                "jdbcRepositoryImpl", "jpaRepositoryImpl"
+        });
+    }
 
     @BeforeClass
-    public static void initRepository() {
-        ApplicationContext applicationContext = SpringApplication.run(SpringPrimeFacesApplication.class);
-        mainRepository = applicationContext.getBean(JdbcRepositoryImpl.class);
+    public static void initContext() {
+        context = SpringApplication.run(SpringPrimeFacesApplication.class);
+    }
+
+    @Before
+    public void initRepository() {
+        mainRepository = (MainRepository) context.getBean(repositoryName);
     }
 
     @Test
@@ -32,7 +59,7 @@ public class TestJdbcRepository {
         Assertions.assertThat(Math.round((200f * 79.46f - 300f) * 0.01f)).isEqualTo(accountFrom.getAmount());
 
         Assertions.assertThatThrownBy(() -> mainRepository.transfer("Vasily", "Ilya", 10000000, "RUB"))
-                .isExactlyInstanceOf(RuntimeException.class);
+                .isExactlyInstanceOf(MoneyTransferException.class);
     }
 
     @Test
@@ -46,24 +73,27 @@ public class TestJdbcRepository {
                 .isEqualToComparingOnlyGivenFields(new Account(5, 22222, "EUR", 200),
                         "id", "accountNumber", "currency");
         Assertions.assertThatThrownBy(() -> mainRepository.getCustomerAccount("NoSuchName"))
-                .isExactlyInstanceOf(RuntimeException.class);
+                .isExactlyInstanceOf(AccountNotFoundException.class);
     }
 
     @Test
     public void checkConvertAmount() {
         Assertions.assertThat(mainRepository.convertAmount(100, "RUB", "USD")).isEqualTo(2);
         Assertions.assertThatThrownBy(() -> mainRepository.convertAmount(200, "A", "B"))
-                .isExactlyInstanceOf(RuntimeException.class);
+                .isExactlyInstanceOf(AmountConversionException.class);
     }
 
     @Test
     public void checkInsertCustomerWithAccount() {
-        mainRepository.insertCustomerWithAccount("Bob", 12345, "RUB", 1000);
-        Customer customer1 = mainRepository.getCustomerByName("Bob");
-        Account account1 = mainRepository.getAccountByAccountNumber(12345);
+        String customerName = RandomStringUtils.randomAlphabetic(10);
+        Integer accountNumber = Integer.valueOf(RandomStringUtils.randomNumeric(6));
 
-        Assertions.assertThat(customer1.getName()).isEqualTo("Bob");
-        Assertions.assertThat(account1.getAccountNumber()).isEqualTo(12345);
+        mainRepository.insertCustomerWithAccount(customerName, accountNumber, "RUB", 1000);
+        Customer customer1 = mainRepository.getCustomerByName(customerName);
+        Account account1 = mainRepository.getAccountByAccountNumber(accountNumber);
+
+        Assertions.assertThat(customer1.getName()).isEqualTo(customerName);
+        Assertions.assertThat(account1.getAccountNumber()).isEqualTo(accountNumber);
         Assertions.assertThat(account1.getCurrency()).isEqualTo("RUB");
         Assertions.assertThat(account1.getAmount()).isEqualTo(1000);
         Assertions.assertThat(customer1.getAccountId()).isEqualTo(account1.getId());

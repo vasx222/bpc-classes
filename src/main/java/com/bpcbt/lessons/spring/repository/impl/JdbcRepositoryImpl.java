@@ -1,4 +1,4 @@
-package com.bpcbt.lessons.spring.repository;
+package com.bpcbt.lessons.spring.repository.impl;
 
 import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
 import com.bpcbt.lessons.spring.exception.AmountConversionException;
@@ -6,6 +6,7 @@ import com.bpcbt.lessons.spring.exception.CustomerNotFoundException;
 import com.bpcbt.lessons.spring.exception.MoneyTransferException;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
+import com.bpcbt.lessons.spring.repository.MainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
