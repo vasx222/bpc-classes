@@ -1,14 +1,10 @@
 package com.bpcbt.lessons.spring.repository.impl;
 
-import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
-import com.bpcbt.lessons.spring.exception.AmountConversionException;
-import com.bpcbt.lessons.spring.exception.CustomerNotFoundException;
-import com.bpcbt.lessons.spring.exception.MoneyTransferException;
+import com.bpcbt.lessons.spring.exception.*;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
 import com.bpcbt.lessons.spring.repository.MainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -18,7 +14,6 @@ import java.sql.PreparedStatement;
 import java.util.List;
 
 @Repository
-@Primary
 public class JdbcRepositoryImpl implements MainRepository {
 
     private JdbcTemplate jdbcTemplate;
@@ -201,6 +196,12 @@ public class JdbcRepositoryImpl implements MainRepository {
 
     @Override
     public void insertCustomerWithAccount(String name, Integer accountNumber, String currency, Integer amount) {
+        if (customerWithNameExists(name)) {
+            throw new CustomerAlreadyExistsException();
+        }
+        if (accountWithAccountNumberExists(accountNumber)) {
+            throw new AccountAlreadyExistsException();
+        }
         final String sql1 = "insert into accounts (account_number, currency, amount) values(?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(

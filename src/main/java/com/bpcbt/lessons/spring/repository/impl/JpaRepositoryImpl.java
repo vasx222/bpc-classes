@@ -1,8 +1,6 @@
 package com.bpcbt.lessons.spring.repository.impl;
 
-import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
-import com.bpcbt.lessons.spring.exception.AmountConversionException;
-import com.bpcbt.lessons.spring.exception.CustomerNotFoundException;
+import com.bpcbt.lessons.spring.exception.*;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.CurrencyRate;
 import com.bpcbt.lessons.spring.model.Customer;
@@ -10,17 +8,23 @@ import com.bpcbt.lessons.spring.repository.AccountRepository;
 import com.bpcbt.lessons.spring.repository.CurrencyRateRepository;
 import com.bpcbt.lessons.spring.repository.CustomerRepository;
 import com.bpcbt.lessons.spring.repository.MainRepository;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Repository
+@Primary
 public class JpaRepositoryImpl implements MainRepository {
 
+    @Getter
     private AccountRepository accountRepository;
+    @Getter
     private CustomerRepository customerRepository;
+    @Getter
     private CurrencyRateRepository currencyRateRepository;
 
     @Autowired
@@ -32,7 +36,7 @@ public class JpaRepositoryImpl implements MainRepository {
 
     @Override
     public Account getCustomerAccount(String name) {
-        return null;
+        return customerRepository.findCustomerByName(name).map(Customer::getAccount).orElseThrow(() -> new AccountNotFoundException());
     }
 
     @Override
@@ -48,7 +52,20 @@ public class JpaRepositoryImpl implements MainRepository {
 
     @Override
     public void transfer(String customerFrom, String customerTo, Integer amount, String currency) {
+        Account accountFrom = getCustomerAccount(customerFrom);
+        Account accountTo = getCustomerAccount(customerTo);
+        Integer amount1 = convertAmount(accountFrom, DEFAULT_CURRENCY);
+        Integer amount2 = convertAmount(accountTo, DEFAULT_CURRENCY);
+        amount = convertAmount(amount, currency, DEFAULT_CURRENCY);
+        if (amount1 - amount < 0) {
+            throw new MoneyTransferException("Impossible to transfer money");
+        }
 
+        amount1 = convertAmount(amount1 - amount, DEFAULT_CURRENCY, accountFrom.getCurrency());
+        amount2 = convertAmount(amount2 + amount, DEFAULT_CURRENCY, accountTo.getCurrency());
+
+        accountRepository.saveAndFlush(accountFrom.withAmount(amount1));
+        accountRepository.saveAndFlush(accountTo.withAmount(amount2));
     }
 
     @Override
@@ -103,6 +120,20 @@ public class JpaRepositoryImpl implements MainRepository {
 
     @Override
     public void insertCustomerWithAccount(String name, Integer accountNumber, String currency, Integer amount) {
-
+        if (customerWithNameExists(name)) {
+            throw new CustomerAlreadyExistsException();
+        }
+        if (accountWithAccountNumberExists(accountNumber)) {
+            throw new AccountAlreadyExistsException();
+        }
+        Account account = new Account();
+        account.setAccountNumber(accountNumber);
+        account.setAmount(amount);
+        account.setCurrency(currency);
+        accountRepository.saveAndFlush(account);
+        Customer customer = new Customer();
+        customer.setName(name);
+        customer.setAccount(account);
+        customerRepository.saveAndFlush(customer);
     }
 }

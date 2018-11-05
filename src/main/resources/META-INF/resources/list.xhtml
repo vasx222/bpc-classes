@@ -18,15 +18,15 @@
                     </p:column>
 
                     <p:column headerText="Account number">
-                        <h:outputText value="#{customersListManager.accounts.get(customer.accountId).accountNumber}"/>
+                        <h:outputText value="#{customer.account.accountNumber}"/>
                     </p:column>
 
                     <p:column headerText="Currency">
-                        <h:outputText value="#{customersListManager.accounts.get(customer.accountId).currency}"/>
+                        <h:outputText value="#{customer.account.currency}"/>
                     </p:column>
 
                     <p:column headerText="Amount">
-                        <h:outputText value="#{customersListManager.accounts.get(customer.accountId).amount}"/>
+                        <h:outputText value="#{customer.account.amount}"/>
                     </p:column>
                 </p:dataTable>
             </p:panel>

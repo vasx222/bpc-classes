@@ -1,11 +1,10 @@
 package com.bpcbt.lessons.spring;
 
-import com.bpcbt.lessons.spring.exception.AccountNotFoundException;
-import com.bpcbt.lessons.spring.exception.AmountConversionException;
-import com.bpcbt.lessons.spring.exception.MoneyTransferException;
+import com.bpcbt.lessons.spring.exception.*;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
 import com.bpcbt.lessons.spring.repository.MainRepository;
+import com.bpcbt.lessons.spring.repository.impl.JpaRepositoryImpl;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -25,7 +24,7 @@ public class MainRepositoryTest {
     @Parameterized.Parameter
     public String repositoryName;
 
-    private MainRepository mainRepository;
+    private static MainRepository mainRepository;
 
     private static ApplicationContext context;
 
@@ -48,15 +47,22 @@ public class MainRepositoryTest {
 
     @Test
     public void checkTransfer() {
+        JpaRepositoryImpl jpaRepository = context.getBean(JpaRepositoryImpl.class);
+        long accountsNumber = jpaRepository.getAccountRepository().count();
+        long customersNumber = jpaRepository.getCustomerRepository().count();
+
         Account accountFrom = mainRepository.getCustomerAccount("Vasily");
         Account accountTo = mainRepository.getCustomerAccount("Ilya");
-        Assertions.assertThat(accountFrom.getAmount()).isEqualTo(200);
-        Assertions.assertThat(accountTo.getAmount()).isEqualTo(100000);
+        Assertions.assertThat(accountFrom.getAccountNumber()).isEqualTo(22222);
+        Assertions.assertThat(accountTo.getAccountNumber()).isEqualTo(11111);
         mainRepository.transfer("Vasily", "Ilya", 300, "RUB");
-        accountFrom = mainRepository.getCustomerAccount("Vasily");
-        accountTo = mainRepository.getCustomerAccount("Ilya");
-        Assertions.assertThat(accountTo.getAmount()).isEqualTo(100300);
-        Assertions.assertThat(Math.round((200f * 79.46f - 300f) * 0.01f)).isEqualTo(accountFrom.getAmount());
+        Account accountFrom1 = mainRepository.getCustomerAccount("Vasily");
+        Account accountTo1 = mainRepository.getCustomerAccount("Ilya");
+        Assertions.assertThat(accountTo1.getAmount()).isEqualTo(accountTo.getAmount() + 300);
+        Assertions.assertThat(Math.round(((float)accountFrom.getAmount() * 79.46f - 300f) * 0.01f)).isEqualTo(accountFrom1.getAmount());
+
+        Assertions.assertThat(accountsNumber).isEqualTo(jpaRepository.getAccountRepository().count());
+        Assertions.assertThat(customersNumber).isEqualTo(jpaRepository.getCustomerRepository().count());
 
         Assertions.assertThatThrownBy(() -> mainRepository.transfer("Vasily", "Ilya", 10000000, "RUB"))
                 .isExactlyInstanceOf(MoneyTransferException.class);
@@ -85,18 +91,32 @@ public class MainRepositoryTest {
 
     @Test
     public void checkInsertCustomerWithAccount() {
+        JpaRepositoryImpl jpaRepository = context.getBean(JpaRepositoryImpl.class);
+        long accountsNumber = jpaRepository.getAccountRepository().count();
+        long customersNumber = jpaRepository.getCustomerRepository().count();
+
         String customerName = RandomStringUtils.randomAlphabetic(10);
         Integer accountNumber = Integer.valueOf(RandomStringUtils.randomNumeric(6));
 
         mainRepository.insertCustomerWithAccount(customerName, accountNumber, "RUB", 1000);
-        Customer customer1 = mainRepository.getCustomerByName(customerName);
-        Account account1 = mainRepository.getAccountByAccountNumber(accountNumber);
+        Customer customer = mainRepository.getCustomerByName(customerName);
+        Account account = mainRepository.getAccountByAccountNumber(accountNumber);
 
-        Assertions.assertThat(customer1.getName()).isEqualTo(customerName);
-        Assertions.assertThat(account1.getAccountNumber()).isEqualTo(accountNumber);
-        Assertions.assertThat(account1.getCurrency()).isEqualTo("RUB");
-        Assertions.assertThat(account1.getAmount()).isEqualTo(1000);
-        Assertions.assertThat(customer1.getAccount()).isEqualToComparingFieldByField(account1);
+        Assertions.assertThat(customer.getName()).isEqualTo(customerName);
+        Assertions.assertThat(account.getAccountNumber()).isEqualTo(accountNumber);
+        Assertions.assertThat(account.getCurrency()).isEqualTo("RUB");
+        Assertions.assertThat(account.getAmount()).isEqualTo(1000);
+        Assertions.assertThat(customer.getAccount()).isEqualToComparingFieldByField(account);
+
+        Assertions.assertThat(accountsNumber + 1).isEqualTo(jpaRepository.getAccountRepository().count());
+        Assertions.assertThat(customersNumber + 1).isEqualTo(jpaRepository.getCustomerRepository().count());
+
+        Assertions.assertThatThrownBy(() ->
+                mainRepository.insertCustomerWithAccount("Vasily", -1, "RUB", 1000))
+                .isExactlyInstanceOf(CustomerAlreadyExistsException.class);
+        Assertions.assertThatThrownBy(() ->
+                mainRepository.insertCustomerWithAccount("Timmy", 11111, "RUB", 1000))
+                .isExactlyInstanceOf(AccountAlreadyExistsException.class);
     }
 
     @Test
