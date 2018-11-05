@@ -13,7 +13,7 @@ import javax.persistence.*;
 @Table(name = "currency_rates")
 public class CurrencyRate {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     @Column(name = "currency1")
     private String currency1;

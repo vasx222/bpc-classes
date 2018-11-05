@@ -137,7 +137,7 @@ public class JdbcRepositoryImpl implements MainRepository {
                 (rs, rowNum) -> new Customer(
                         rs.getInt("customers.id"),
                         rs.getString("customers.name"),
-                        rs.getInt("customers.account_id")));
+                        getAccountById(rs.getInt("customers.account_id"))));
         return list.stream().findFirst().orElseThrow(() -> new CustomerNotFoundException("Impossible to find customer by name"));
     }
 
@@ -166,7 +166,7 @@ public class JdbcRepositoryImpl implements MainRepository {
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Customer(
                 rs.getInt("customers.id"),
                 rs.getString("customers.name"),
-                rs.getInt("customers.account_id")));
+                getAccountById(rs.getInt("customers.account_id"))));
     }
 
     @Override

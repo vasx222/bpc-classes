@@ -42,16 +42,15 @@ public class TransferMoneyManager {
         customers = mainRepository.getCustomers().stream()
                 .collect(Collectors.toMap(Customer::getName, Function.identity()));
         accounts = mainRepository.getAccounts().stream()
-                .collect(Collectors.toMap(Account::getId, Function.identity()));
+                .collect(Collectors.toMap(Account::getAccountNumber, Function.identity()));
         this.currencies = mainRepository.getCurrencies();
-
 
         sender = customers.values().iterator().next();
         recipient = customers.values().iterator().next();
         senderName = sender.getName();
         recipientName = recipient.getName();
-        senderAccount = accounts.get(sender.getAccountId());
-        recipientAccount = accounts.get(recipient.getAccountId());
+        senderAccount = accounts.get(sender.getAccount().getAccountNumber());
+        recipientAccount = accounts.get(recipient.getAccount().getAccountNumber());
     }
 
     public String transferMoney() {
@@ -90,7 +89,7 @@ public class TransferMoneyManager {
     public void setSenderName(String senderName) {
         this.senderName = senderName;
         sender = customers.get(senderName);
-        senderAccount = accounts.get(sender.getAccountId());
+        senderAccount = accounts.get(sender.getAccount().getAccountNumber());
     }
 
     public String getRecipientName() {
@@ -100,7 +99,7 @@ public class TransferMoneyManager {
     public void setRecipientName(String recipientName) {
         this.recipientName = recipientName;
         recipient = customers.get(recipientName);
-        recipientAccount = accounts.get(recipient.getAccountId());
+        recipientAccount = accounts.get(recipient.getAccount().getAccountNumber());
     }
 
     public Customer getSender() {

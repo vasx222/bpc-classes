@@ -96,7 +96,7 @@ public class MainRepositoryTest {
         Assertions.assertThat(account1.getAccountNumber()).isEqualTo(accountNumber);
         Assertions.assertThat(account1.getCurrency()).isEqualTo("RUB");
         Assertions.assertThat(account1.getAmount()).isEqualTo(1000);
-        Assertions.assertThat(customer1.getAccountId()).isEqualTo(account1.getId());
+        Assertions.assertThat(customer1.getAccount()).isEqualToComparingFieldByField(account1);
     }
 
     @Test
