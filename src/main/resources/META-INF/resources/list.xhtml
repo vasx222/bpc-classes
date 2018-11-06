@@ -4,7 +4,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:h="http://xmlns.jcp.org/jsf/html"
       xmlns:ui="http://xmlns.jcp.org/jsf/facelets" xmlns:p="http://primefaces.org/ui"
-      xmlns:f="http://xmlns.jcp.org/jsf/core">
+>
 <ui:composition template="index.xhtml">
 
     <ui:define name="content">
@@ -18,15 +18,15 @@
                     </p:column>
 
                     <p:column headerText="Account number">
-                        <h:outputText value="#{customersListManager.accounts.get(customer.accountId).accountNumber}"/>
+                        <h:outputText value="#{customer.account.accountNumber}"/>
                     </p:column>
 
                     <p:column headerText="Currency">
-                        <h:outputText value="#{customersListManager.accounts.get(customer.accountId).currency}"/>
+                        <h:outputText value="#{customer.account.currency}"/>
                     </p:column>
 
                     <p:column headerText="Amount">
-                        <h:outputText value="#{customersListManager.accounts.get(customer.accountId).amount}"/>
+                        <h:outputText value="#{customer.account.amount}"/>
                     </p:column>
                 </p:dataTable>
             </p:panel>

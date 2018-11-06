@@ -1,27 +1,29 @@
-package com.bpcbt.lessons.spring.repository;
+package com.bpcbt.lessons.spring.repository.impl;
 
+import com.bpcbt.lessons.spring.exception.*;
 import com.bpcbt.lessons.spring.model.Account;
 import com.bpcbt.lessons.spring.model.Customer;
+import com.bpcbt.lessons.spring.repository.MainRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.util.List;
 
-@Component
-public class JdbcRepository {
+@Repository
+public class JdbcRepositoryImpl implements MainRepository {
 
     private JdbcTemplate jdbcTemplate;
-    private static final String DEFAULT_CURRENCY = "RUB";
 
     @Autowired
-    public JdbcRepository(JdbcTemplate jdbcTemplate) {
+    public JdbcRepositoryImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    @Override
     public Account getCustomerAccount(String name) {
         String sql = "select * from customers inner join " +
                 "accounts on customers.account_id=accounts.id where customers.name=?";
@@ -35,13 +37,15 @@ public class JdbcRepository {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by name"));
+        return list.stream().findFirst().orElseThrow(() -> new AccountNotFoundException("Impossible to find account by name"));
     }
 
+    @Override
     public Integer convertAmount(Account account, String currencyTo) {
         return convertAmount(account.getAmount(), account.getCurrency(), currencyTo);
     }
 
+    @Override
     public Integer convertAmount(Integer amount, String currencyFrom, String currencyTo) {
         String sql = "select * from currency_rates where currency1=? and currency2=?";
 
@@ -53,9 +57,10 @@ public class JdbcRepository {
                 (rs, rowNum) -> rs.getFloat("multiplier"));
 
         return list.stream().findFirst()
-                .map(e -> Math.round(e * amount)).orElseThrow(() -> new RuntimeException("Impossible to convert amount"));
+                .map(e -> Math.round(e * amount)).orElseThrow(() -> new AmountConversionException("Impossible to convert amount"));
     }
 
+    @Override
     public void transfer(String customerFrom, String customerTo, Integer amount, String currency) {
         Account accountFrom = getCustomerAccount(customerFrom);
         Account accountTo = getCustomerAccount(customerTo);
@@ -63,7 +68,7 @@ public class JdbcRepository {
         Integer amount2 = convertAmount(accountTo, DEFAULT_CURRENCY);
         amount = convertAmount(amount, currency, DEFAULT_CURRENCY);
         if (amount1 - amount < 0) {
-            throw new RuntimeException("Impossible to transfer money");
+            throw new MoneyTransferException("Impossible to transfer money");
         }
 
         amount1 = convertAmount(amount1 - amount, DEFAULT_CURRENCY, accountFrom.getCurrency());
@@ -74,6 +79,7 @@ public class JdbcRepository {
         jdbcTemplate.update(sql, amount2, accountTo.getId());
     }
 
+    @Override
     public void printCustomersAccounts() {
         String sql = "select * from customers inner join accounts on customers.account_id = accounts.id";
         jdbcTemplate.query(sql, rs -> {
@@ -90,6 +96,7 @@ public class JdbcRepository {
         });
     }
 
+    @Override
     public void printTable(String tableName) {
         System.out.println("tableName = " + tableName);
         jdbcTemplate.query("select * from " + tableName,
@@ -104,6 +111,7 @@ public class JdbcRepository {
         );
     }
 
+    @Override
     public Account getAccountById(Integer id) {
         String sql = "select * from accounts where id = ?";
         List<Account> list = jdbcTemplate.query(sql,
@@ -113,9 +121,10 @@ public class JdbcRepository {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by id"));
+        return list.stream().findFirst().orElseThrow(() -> new AccountNotFoundException("Impossible to find account by id"));
     }
 
+    @Override
     public Customer getCustomerByName(String name) {
         String sql = "select * from customers where customers.name = ?";
         List<Customer> list = jdbcTemplate.query(sql,
@@ -123,10 +132,11 @@ public class JdbcRepository {
                 (rs, rowNum) -> new Customer(
                         rs.getInt("customers.id"),
                         rs.getString("customers.name"),
-                        rs.getInt("customers.account_id")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find customer by name"));
+                        getAccountById(rs.getInt("customers.account_id"))));
+        return list.stream().findFirst().orElseThrow(() -> new CustomerNotFoundException("Impossible to find customer by name"));
     }
 
+    @Override
     public Account getAccountByAccountNumber(Integer accountNumber) {
         String sql = "select * from accounts where account_number = ?";
         List<Account> list = jdbcTemplate.query(sql,
@@ -136,22 +146,25 @@ public class JdbcRepository {
                         rs.getInt("account_number"),
                         rs.getString("currency"),
                         rs.getInt("amount")));
-        return list.stream().findFirst().orElseThrow(() -> new RuntimeException("Impossible to find account by account_number"));
+        return list.stream().findFirst().orElseThrow(() -> new AccountNotFoundException("Impossible to find account by account_number"));
     }
 
+    @Override
     public List<String> getCurrencies() {
         String sql = "select distinct currency1 from currency_rates";
         return jdbcTemplate.query(sql, (resultSet, i) -> resultSet.getString("currency1"));
     }
 
+    @Override
     public List<Customer> getCustomers() {
         String sql = "select * from customers";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Customer(
                 rs.getInt("customers.id"),
                 rs.getString("customers.name"),
-                rs.getInt("customers.account_id")));
+                getAccountById(rs.getInt("customers.account_id"))));
     }
 
+    @Override
     public List<Account> getAccounts() {
         String sql = "select * from accounts";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new Account(
@@ -161,25 +174,34 @@ public class JdbcRepository {
                 rs.getInt("accounts.amount")));
     }
 
+    @Override
     public Boolean customerWithNameExists(String name) {
         try {
             getCustomerByName(name);
-        } catch (RuntimeException e) {
+        } catch (CustomerNotFoundException e) {
             return false;
         }
         return true;
     }
 
+    @Override
     public Boolean accountWithAccountNumberExists(Integer accountNumber) {
         try {
             getAccountByAccountNumber(accountNumber);
-        } catch (RuntimeException e) {
+        } catch (AccountNotFoundException e) {
             return false;
         }
         return true;
     }
 
+    @Override
     public void insertCustomerWithAccount(String name, Integer accountNumber, String currency, Integer amount) {
+        if (customerWithNameExists(name)) {
+            throw new CustomerAlreadyExistsException();
+        }
+        if (accountWithAccountNumberExists(accountNumber)) {
+            throw new AccountAlreadyExistsException();
+        }
         final String sql1 = "insert into accounts (account_number, currency, amount) values(?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(

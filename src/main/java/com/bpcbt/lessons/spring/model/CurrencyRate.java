@@ -10,14 +10,15 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "customers")
-public class Customer {
+@Table(name = "currency_rates")
+public class CurrencyRate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    @Column(name = "name")
-    private String name;
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "account_id")
-    private Account account;
+    @Column(name = "currency1")
+    private String currency1;
+    @Column(name = "currency2")
+    private String currency2;
+    @Column(name = "multiplier")
+    private Float multiplier;
 }

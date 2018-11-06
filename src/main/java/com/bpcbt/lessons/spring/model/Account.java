@@ -1,9 +1,27 @@
 package com.bpcbt.lessons.spring.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Wither;
+
+import javax.persistence.*;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Wither
+@Entity
+@Table(name = "accounts")
 public class Account {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+    @Column(name = "account_number")
     private Integer accountNumber;
+    @Column(name = "currency")
     private String currency;
+    @Column(name = "amount")
     private Integer amount;
 
     @Override
@@ -14,44 +32,5 @@ public class Account {
                 ", currency='" + currency + '\'' +
                 ", amount=" + amount +
                 '}';
-    }
-
-    public Account(Integer id, Integer accountNumber, String currency, Integer amount) {
-        this.id = id;
-        this.accountNumber = accountNumber;
-        this.currency = currency;
-        this.amount = amount;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public Integer getAccountNumber() {
-        return accountNumber;
-    }
-
-    public String getCurrency() {
-        return currency;
-    }
-
-    public Integer getAmount() {
-        return amount;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public void setAccountNumber(Integer accountNumber) {
-        this.accountNumber = accountNumber;
-    }
-
-    public void setCurrency(String currency) {
-        this.currency = currency;
-    }
-
-    public void setAmount(Integer amount) {
-        this.amount = amount;
     }
 }
